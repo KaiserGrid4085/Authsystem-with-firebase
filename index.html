@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=1080') no-repeat center center fixed;
+            background-size: cover;
+            color: #00FFFF; /* Electric Blue */
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        nav {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed; /* Keep the navbar fixed */
+            width: 100%; /* Ensure it spans full width */
+            z-index: 900; /* Keep it on top */
+        }
+        button {
+            margin:10px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        button:hover {
+            background-color: rgba(0, 123, 255, 0.8);
+            color: white;
+            transform: scale(1.05);
+        }
+        #message {
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+        #message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .content {
+            margin-top: 0px; /* Add space for the fixed navbar */
+            align-self: center;
+        }
+        .embed-responsive {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h1>Portfolio Site of Rokala Krishna</h1>
+    <div id="userNav" style="display: none;">
+        <span id="userName" class="align-item-center"></span>
+        <img id="userPhoto" src="" alt="User Photo" style="display: none;">
+        <button id="signOutButton" class="btn btn-danger">Sign Out</button>
+    </div>
+</nav>
+
+<div class="content">
+    <br><br><br><br><button id="signInButton" class="btn btn-primary">Create Account / Sign In</button>
+    <div id="message" class="mt-4">
+        <p>You have signed in as <span id="userEmail"></span></p>
+    </div>
+    <div class="embed-responsive embed-responsive-16by9">
+        <iframe id="frame" src="" class="embed-responsive-item" style="display:none;"></iframe>
+    </div>
+</div>
+
+
+<script type="module">
+  // Import Firebase SDKs
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
+  // Your web app's Firebase configuration
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyB51Zs9LNLCPJ_Tgu8QSZ9c_nXCVEzLQJo",
+      authDomain: "authentication-57fa3.firebaseapp.com",
+      projectId: "authentication-57fa3",
+      storageBucket: "authentication-57fa3.appspot.com",
+      messagingSenderId: "819063426019",
+      appId: "1:819063426019:web:cc65667a408df05f0daed6",
+      measurementId: "G-DX7EQE9PDE"
+    };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+
+  const signInButton = document.getElementById("signInButton");
+  const signOutButton = document.getElementById("signOutButton");
+  const message = document.getElementById("message");
+  const userName = document.getElementById("userName");
+  const userEmail = document.getElementById("userEmail");
+  const userPhoto = document.getElementById("userPhoto");
+  const userNav = document.getElementById("userNav");
+  const frame = document.getElementById("frame");
+  const User = [];
+
+  const toggleMessage = (show) => {
+      if (show) {
+          message.classList.add('show');
+          frame.src = "https://kaisergrid.github.io/MyWebsite/";
+          frame.style.display = "block"; // Show the iframe
+      } else {
+          message.classList.remove('show');
+          frame.style.display = "none"; // Hide the iframe
+          frame.src = ""; // Reset the iframe source
+      }
+  };
+
+  const userSignIn = async () => {
+      signInWithPopup(auth, provider)
+          .then((result) => {
+              console.log(result);
+              User.push(result.user);
+              const user = User[0]; // Get the first user
+              userName.innerHTML = user.displayName;
+              userEmail.innerHTML = user.email;
+              userPhoto.src = user.photoURL;
+              userNav.style.display = 'flex';
+              userPhoto.style.display = 'inline';
+              toggleMessage(true);
+          })
+          .catch((error) => {
+              console.error(error);
+          });
+  };
+
+  const userSignOut = async () => {
+      signOut(auth)
+          .then(() => {
+              alert("Signed out successfully");
+              User.length = 0;
+              userNav.style.display = 'none';
+              toggleMessage(false);
+          })
+          .catch((error) => {
+              console.error(error);
+          });
+  };
+
+  onAuthStateChanged(auth, (user) => {
+      if (user) {
+          signInButton.style.display = "none";
+          userNav.style.display = "flex";
+          toggleMessage(true);
+      } else {
+          signInButton.style.display = "block";
+          userNav.style.display = "none";
+          toggleMessage(false);
+      }
+  });
+
+  signInButton.addEventListener("click", userSignIn);
+  signOutButton.addEventListener("click", userSignOut);
+</script>
+
+</body>
+</html>
